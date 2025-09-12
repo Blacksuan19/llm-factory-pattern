@@ -44,21 +44,32 @@ uv pip install -e ".[dev]"
 from llm_factory import get_llm
 
 # Get a model by name
-model = get_llm("gpt_4o", "model_config")
+model = get_llm("gpt_4o")
 print(f"Loaded model: {model.name}")
 
 # Use the model
-response = model.generate_response("Hello, world!")
+response = model.invoke("Hello, world!")
 print(response)
 
 # Force reload to get a fresh instance
-model_reloaded = get_llm("gpt_4o", "model_config", force_reload=True)
+model_reloaded = get_llm("gpt_4o", force_reload=True)
+
+# create a langchain chain
+
+prompt_template = ChatPromptTemplate.from_template(
+    "What is the capital of {country}?"
+)
+chain = prompt_template | model_reloaded.llm
+
+response = chain.invoke({"country": "France"})
+
 ```
 
 ### Using Built-in Model Configurations
 
-The package includes pre-defined model configurations in the `model_config`
-directory:
+The package includes pre-defined model configurations in the `model_config`, the
+argument to `get_llm` is optional and defaults to the value of
+`get_default_config_dir()` directory:
 
 ```python
 from llm_factory import get_llm, model_config
@@ -73,12 +84,8 @@ model = get_llm("gpt_4o", config_dir)
 
 ### Configuration
 
-Create a `.env` file with the following variables:
-
-```
-SSM_PROVIDER_PATH_PARAMETER=/LLM_CONFIG/PROVIDER_MODULES_S3_PATH
-SSM_MODELS_PATH_PARAMETER=/LLM_CONFIG/MODELS_CONFIG_S3_PATH
-```
+- copy `.env.example` to `.env` and fill the paramters, for defaults check the
+  `EnvSetting` class in `config_models.py`
 
 ### Creating Custom Providers
 
@@ -89,6 +96,7 @@ SSM_MODELS_PATH_PARAMETER=/LLM_CONFIG/MODELS_CONFIG_S3_PATH
 Example custom provider:
 
 ```python
+# cluade_sonnet_4.py
 from llm_factory.models import BaseLlmModel
 
 class CustomLlmModel(BaseLlmModel):
@@ -99,6 +107,20 @@ class CustomLlmModel(BaseLlmModel):
     def generate_response(self, prompt, **kwargs):
         # Implement response generation
         return "Custom response"
+```
+
+now you can load the above model dynamically
+
+```python
+from llm_factory import get_llm
+
+# force reload to trigger fetching from S3
+model = get_llm("cluade_sonnet_4", force_reload=True)
+print(f"Loaded model: {model.name}")
+
+# Use the model
+response = model.invoke("Hello, world!")
+print(response)
 ```
 
 ## Model Configuration
