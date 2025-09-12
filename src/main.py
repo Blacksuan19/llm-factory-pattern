@@ -1,3 +1,4 @@
+from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
 
 from model_config import get_default_config_dir
@@ -71,4 +72,6 @@ def run_demo(model_repository_path: str):
 
 
 if __name__ == "__main__":
+
+    load_dotenv()
     run_demo(get_default_config_dir())
