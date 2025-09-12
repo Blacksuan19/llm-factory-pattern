@@ -5,12 +5,12 @@ from model_config import get_default_config_dir
 from model_factory import ModelNotFoundError, get_llm
 
 
-def run_demo(model_repository_path: str):
+def run_demo():
     """Demonstrates accessing LLMs using the get_llm function."""
-
+    model_repository_path = get_default_config_dir()
     print(f"\n--- Demonstrating from {model_repository_path} ---")
     # The first call to get_llm will trigger configuration loading and instantiation
-    claude_model = get_llm("claude_sonnet_3_7", model_repository_path)
+    claude_model = get_llm("claude_sonnet_3_7")
     print(f"Retrieved model: {claude_model.name} ({claude_model.__class__.__name__})")
     print(f"Claude sonnet Input Cost: ${claude_model.config.input_token_cost}/M tokens")
 
@@ -29,14 +29,14 @@ def run_demo(model_repository_path: str):
 
     # Requesting the same model again with the same source should return the cached instance
     print("\n--- Requesting Claude again with same source to demonstrate caching ---")
-    claude_model_cached = get_llm("claude_sonnet_3_7", model_repository_path)
+    claude_model_cached = get_llm("claude_sonnet_3_7")
     print(
         f"Retrieved model (cached): {claude_model_cached.name} ({claude_model_cached.__class__.__name__})"
     )
     print(f"Is it the same instance? {claude_model is claude_model_cached}")
 
     # Get an OpenAI GPT-4o model from the same source
-    gpt_model = get_llm("gpt_4o", model_repository_path)
+    gpt_model = get_llm("gpt_4o")
     print(f"Retrieved model: {gpt_model.name} ({gpt_model.__class__.__name__})")
     print(f"GPT-4o Output Cost: ${gpt_model.config.output_token_cost}/M tokens")
 
@@ -54,7 +54,7 @@ def run_demo(model_repository_path: str):
         print(f"Error generating GPT-4o response via chain: {e}")
 
     # Get a Bedrock Llama model from the same source
-    llama_model = get_llm("llama_3_8b_instruct", model_repository_path)
+    llama_model = get_llm("llama_3_8b_instruct")
     print(f"Retrieved model: {llama_model.name} ({llama_model.__class__.__name__})")
     print(f"Llama Input Cost: ${llama_model.config.input_token_cost}/M tokens")
     # Uncomment the following lines to attempt actual API calls (requires valid AWS credentials)
@@ -66,7 +66,7 @@ def run_demo(model_repository_path: str):
 
     # Try to get a non-existent model
     try:
-        get_llm("non_existent_model", model_repository_path)
+        get_llm("non_existent_model")
     except ModelNotFoundError as e:
         print(f"Caught expected error: {e}")
 
@@ -74,4 +74,4 @@ def run_demo(model_repository_path: str):
 if __name__ == "__main__":
 
     load_dotenv()
-    run_demo(get_default_config_dir())
+    run_demo()

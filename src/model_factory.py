@@ -11,6 +11,7 @@ from s3path import S3Path
 
 from config_models import AllModelsConfig, ModelConfig, Provider, env
 from exceptions import ModelConfigurationError, ModelNotFoundError
+from model_config import get_default_config_dir
 from models.base_model import BaseLlmModel
 from models.bedrock import LangChainBedrockModel
 from models.openai import LangChainOpenAIModel
@@ -223,7 +224,9 @@ def _get_llm_lru(model_name_key: str, local_path: str) -> BaseLlmModel:
 
 
 def get_llm(
-    model_name_key: str, local_path: str, force_reload: bool = False
+    model_name_key: str,
+    local_path: str = get_default_config_dir(),
+    force_reload: bool = False,
 ) -> BaseLlmModel:
     """
     Create and retrieve an instantiated LLM.
