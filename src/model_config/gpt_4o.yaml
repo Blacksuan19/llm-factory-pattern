@@ -1,0 +1,9 @@
+name: "GPT-4o"
+provider: "openai"
+# api_key_secret_name: "my-app/openai-api-key" # Uncomment and configure in AWS Secrets Manager for production
+model_id: "gpt-4o"
+input_token_cost_usd_per_million: 5.0
+output_token_cost_usd_per_million: 15.0
+max_tokens: 4096
+temperature: 0.7
+description: "OpenAI's GPT-4o model."

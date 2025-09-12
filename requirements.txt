@@ -1,0 +1,10 @@
+pydantic
+langchain
+boto3
+langchain_aws
+langchain_openai
+s3path
+omegaconf
+boto3-stubs[s3,ssm]
+pydantic_settings
+python-dotenv

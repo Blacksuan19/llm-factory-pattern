@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "llm_factory"
+version = "0.1.0"
+description = "A factory pattern implementation for dynamically loading LLM providers and models"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Blacksuan19", email = "pypi@blacksuan19.dev" }]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "pydantic",
+    "langchain",
+    "boto3",
+    "langchain_aws",
+    "langchain_openai",
+    "s3path",
+    "omegaconf",
+    "pydantic_settings",
+    "python-dotenv",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "black", "isort", "mypy", "boto3-stubs[s3,ssm]"]
+
+[tool.black]
+line-length = 88
+target-version = ["py39"]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+namespaces = false
+
+[tool.setuptools.package-data]
+"*" = ["*.yaml"]
+"src" = ["model_config/*.yaml"]
+
+[tool.setuptools.data-files]
+"model_config" = ["model_config/*.yaml"]
