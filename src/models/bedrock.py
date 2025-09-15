@@ -2,8 +2,7 @@ from langchain_aws import ChatBedrock
 from langchain_core.language_models import BaseChatModel
 
 from config_models import ModelConfig
-
-from .base_model import BaseLlmModel
+from models.base_model import BaseLlmModel
 
 
 class LangChainBedrockModel(BaseLlmModel):

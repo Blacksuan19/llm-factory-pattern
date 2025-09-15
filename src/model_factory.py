@@ -116,19 +116,20 @@ class ModelFactory:
         if not s3_provider_path:
             return
 
-        # Create a temporary directory to store downloaded provider modules
-        with tempfile.TemporaryDirectory() as temp_dir:
-            s3_dir = S3Path(s3_provider_path)
-            if not s3_dir.is_dir():
-                print(f"S3 provider path '{s3_provider_path}' is not a directory.")
-                return
+        # Download S3 provider modules directly into the src/models/ directory
+        models_dir = Path(__file__).parent / "models"
+        models_dir.mkdir(exist_ok=True)
+        s3_dir = S3Path(s3_provider_path)
+        if not s3_dir.is_dir():
+            print(f"S3 provider path '{s3_provider_path}' is not a directory.")
+            return
 
-            # Download all Python files from S3
-            for py_file in s3_dir.glob("*.py"):
-                provider_name = py_file.stem
-                local_file_path = Path(temp_dir) / f"{provider_name}.py"
-                local_file_path.write_text(py_file.read_text())
-                self._load_provider_module(provider_name, local_file_path)
+        # Download all Python files from S3
+        for py_file in s3_dir.glob("*.py"):
+            provider_name = py_file.stem
+            local_file_path = models_dir / f"{provider_name}.py"
+            local_file_path.write_text(py_file.read_text())
+            self._load_provider_module(provider_name, local_file_path)
 
     def _load_provider_module(self, provider_name: str, file_path: str):
         """Dynamically load a provider module from a file path"""

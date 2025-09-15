@@ -6,8 +6,7 @@ from langchain_openai import ChatOpenAI
 
 from config_models import ModelConfig
 
-from .base_model import BaseLlmModel
-
+from models.base_model import BaseLlmModel
 
 class LangChainOpenAIModel(BaseLlmModel):
     """Concrete implementation for OpenAI chat models using LangChain's ChatOpenAI."""
