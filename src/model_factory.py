@@ -2,7 +2,7 @@ import importlib.util
 import tempfile
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, Type
+from typing import Dict, Optional, Type
 
 import boto3
 from omegaconf import DictConfig, OmegaConf
@@ -42,6 +42,18 @@ class ModelFactory:
 
         return cls._instance
 
+    @classmethod
+    def reset(cls) -> None:
+        """Reset the factory singleton and clear dynamic providers.
+
+        Next instantiation will reload built-in providers, custom providers from S3,
+        and model configurations.
+        """
+        cls._instance = None
+        # Clear dynamic providers; keep empty so __new__ rebuilds with built-ins
+        cls._model_type_registry = {}
+        cls._custom_provider_modules = {}
+
     def _fetch_ssm_parameter(self, parameter_name: str, required: bool = False) -> str:
         """Fetch a parameter value from SSM Parameter Store
 
@@ -66,13 +78,42 @@ class ModelFactory:
             print(f"Warning: {error_msg}")
             return ""
 
+    def _resolve_ssm_s3_dir(
+        self, param_name: Optional[str], *, what: str, required: bool
+    ) -> Optional[str]:
+        """Resolve an SSM parameter (whose name is provided in env) into an S3 dir path.
+
+        Args:
+            param_name: Name of the SSM parameter to look up (from environment).
+            what: Human description of what this S3 path is for (e.g., "provider modules").
+            required: If True, raise ModelConfigurationError when unavailable/empty; otherwise, log and return None.
+
+        Returns:
+            The S3 directory path string if available, else None.
+        """
+        if not param_name:
+            msg = f"SSM parameter name for {what} not set in env;"
+            if required:
+                raise ModelConfigurationError(f"{msg} cannot proceed")
+            print(f"{msg} skipping")
+            return None
+
+        value = self._fetch_ssm_parameter(param_name, required=required)
+        if not value:
+            msg = f"SSM parameter '{param_name}' for {what} returned empty;"
+            if required:
+                raise ModelConfigurationError(msg + " cannot proceed")
+            print(msg + " skipping")
+            return None
+        return value
+
     def _load_custom_providers(self):
         """Load custom provider modules from S3"""
-        # Get SSM parameter name from environment variable
-        param_name = env.SSM_PROVIDER_PATH_PARAMETER
-        s3_provider_path = self._fetch_ssm_parameter(param_name)
+        # Get S3 directory for provider modules
+        s3_provider_path = self._resolve_ssm_s3_dir(
+            env.SSM_PROVIDER_PATH_PARAMETER, what="provider modules", required=False
+        )
         if not s3_provider_path:
-            print("No S3 provider path configured, skipping custom provider loading")
             return
 
         # Create a temporary directory to store downloaded provider modules
@@ -134,11 +175,11 @@ class ModelFactory:
         print(f"Loading configurations from: {source_path}")
         local_config = self._load_local_config(Path(source_path))
 
-        # Get SSM parameter name from environment variable
-        param_name = env.SSM_MODELS_PATH_PARAMETER
-        remote_config = self._load_s3_config(
-            self._fetch_ssm_parameter(param_name, required=True)
+        # Resolve S3 directory for model yaml configs
+        s3_models_path = self._resolve_ssm_s3_dir(
+            env.SSM_MODELS_PATH_PARAMETER, what="model configs", required=True
         )
+        remote_config = self._load_s3_config(s3_models_path)
         raw_configs = OmegaConf.merge(local_config, remote_config)
 
         if not raw_configs:
@@ -200,6 +241,8 @@ class ModelFactory:
             if isinstance(model_config.provider, Provider)
             else model_config.provider
         )
+        # Normalize to lowercase for registry lookup
+        provider_key = provider_key.lower()
         model_class = ModelFactory._model_type_registry.get(provider_key)
 
         if not model_class:
@@ -208,9 +251,6 @@ class ModelFactory:
             )
 
         return model_class(name=model_config.name, config=model_config)
-
-
-from functools import lru_cache
 
 
 def _get_llm_cached(model_name_key: str, local_path: str) -> BaseLlmModel:
@@ -240,5 +280,7 @@ def get_llm(
         BaseLlmModel: The instantiated LLM model.
     """
     if force_reload:
+        # Clear cached instances and reset the factory so providers/configs reload
         _get_llm_lru.cache_clear()
+        ModelFactory.reset()
     return _get_llm_lru(model_name_key, str(local_path))
