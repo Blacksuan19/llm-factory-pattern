@@ -7,7 +7,7 @@ from .exceptions import ModelConfigurationError, ModelNotFoundError
 from .model_config import get_default_config_dir, get_default_configs
 from .model_factory import ModelFactory, get_llm
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "ModelFactory",

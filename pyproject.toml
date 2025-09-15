@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "llm_factory"
-version = "0.1.0"
+version = "0.2.0"
 description = "A factory pattern implementation for dynamically loading LLM providers and models"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -62,7 +62,7 @@ namespaces = false
 
 
 [tool.bumpver]
-current_version = "0.1.0"
+current_version = "0.2.0"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "Bump version {old_version} -> {new_version}"
 commit = true
