@@ -118,35 +118,46 @@ Setup overview:
 S3 layout example:
 
 ```text
-s3://my-bucket/llm/providers/
-    ├── my_cool_provider.py
-    └── acme_llm.py
-```
+s3://my-bucket/
+        ├── models
+        │   └── mistral_7b_instruct.yaml
+        └── providers
+            └── huggingface.py
 
-YAML model config example referencing a custom provider by file stem:
-
-```yaml
-name: MyCoolModel
-provider: my_cool_provider # matches my_cool_provider.py
-model_id: my-cool-001
-max_tokens: 2048
-temperature: 0.5
 ```
 
 Example custom provider:
 
 ```python
-# my_cool_provider.py
-from llm_factory.models.base_model import BaseLlmModel
+# providers/huggingface.py
+from models.base_model import BaseLlmModel
+from langchain_huggingface import HuggingFaceEndpoint
 
-class MyCoolProvider(BaseLlmModel):
-    def __init__(self, name, config):
+class HuggingFaceProvider(BaseLlmModel):
+    def __init__(self, name, config: ModelConfig):
         super().__init__(name, config)
 
     def _initialize_llm(self):
-        # Return a LangChain BaseChatModel-compatible instance here
-        # For example purposes, return a simple mock or raise NotImplementedError
-        raise NotImplementedError("Initialize your underlying LangChain model here")
+        return HuggingFaceEndpoint(
+            endpoint_url=self.config.model_id,
+            model_kwargs={
+                "max_length": self.config.max_tokens,
+                "temperature": self.config.temperature,
+            },
+        )
+```
+
+YAML model config example referencing a custom provider by file stem:
+
+```yaml
+# models/mistral_7b_instruct.yaml
+name: Mistral-7B-Instruct
+provider: huggingface # matches huggingface.py
+model_id: mistralai/Mistral-7B-Instruct-v0.1
+input_token_cost_usd_per_million: 5.0
+output_token_cost_usd_per_million: 2.0
+max_tokens: 2048
+temperature: 0.5
 ```
 
 Now you can load the above provider dynamically (after uploading the file to the
@@ -156,7 +167,8 @@ configured S3 path):
 from llm_factory import get_llm
 
 # Force reload to trigger fetching providers and configs from S3
-model = get_llm("my_cool_model", force_reload=True)
+# model name matches the YAML file name without .yaml
+model = get_llm("mistral_7b_instruct", force_reload=True)
 print(f"Loaded model: {model.name}")
 
 # Use the model
