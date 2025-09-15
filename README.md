@@ -176,19 +176,20 @@ input_token_cost_usd_per_million: 5.0
 output_token_cost_usd_per_million: 15.0
 max_tokens: 4096
 temperature: 0.7
+```
 
 ### Environment and Parameters
 
 Two optional SSM parameters control remote loading:
 
-- `SSM_PROVIDER_PATH_PARAMETER` (default `/LLM_CONFIG/PROVIDER_MODULES_S3_PATH`):
-    S3 directory containing provider Python modules.
-- `SSM_MODELS_PATH_PARAMETER` (default `/LLM_CONFIG/MODELS_CONFIG_S3_PATH`):
-    S3 directory containing YAML model config files.
+- `SSM_PROVIDER_PATH_PARAMETER` (default
+  `/LLM_CONFIG/PROVIDER_MODULES_S3_PATH`): S3 directory containing provider
+  Python modules.
+- `SSM_MODELS_PATH_PARAMETER` (default `/LLM_CONFIG/MODELS_CONFIG_S3_PATH`): S3
+  directory containing YAML model config files.
 
 You can override these via environment variables matching their names, or by
 setting different values for the parameters themselves.
-```
 
 ## License
 
